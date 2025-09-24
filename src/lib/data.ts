@@ -6,6 +6,13 @@ export const CATEGORY_COLORS = [
   '#E67E22',
   '#E74C3C',
   '#95A5A6',
+  '#1ABC9C',
+  '#3498DB',
+  '#9B59B6',
+  '#34495E',
+  '#16A085',
+  '#C0392B',
+  '#D35400',
 ];
 
 export interface Category {

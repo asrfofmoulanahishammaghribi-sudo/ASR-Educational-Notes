@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, type ChangeEvent, useEffect } from 'react';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { initialNotes, initialCategories, type Note, type Category } from '@/lib/data';
 import {
@@ -24,8 +24,9 @@ import {
   deleteCategory as deleteCategoryFromDb,
 } from '@/lib/firebase-services';
 import { useAuth } from '@/hooks/use-auth';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { useRouter } from 'next/navigation';
 
 
 export function NotesPage() {
@@ -38,6 +39,7 @@ export function NotesPage() {
 
   const { toast } = useToast();
   const { user, logout } = useAuth();
+  const router = useRouter();
   
   useEffect(() => {
     async function loadData() {
@@ -242,6 +244,11 @@ export function NotesPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem onClick={() => router.push('/signup')}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    <span>Create User</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
@@ -268,15 +275,16 @@ export function NotesPage() {
             )}
           </main>
         </SidebarInset>
-      </div>
+      
 
-      <NoteEditor
-        isOpen={isEditorOpen}
-        onOpenChange={setEditorOpen}
-        note={editingNote}
-        onSave={handleSaveNote}
-        categories={categories}
-      />
+        <NoteEditor
+          isOpen={isEditorOpen}
+          onOpenChange={setEditorOpen}
+          note={editingNote}
+          onSave={handleSaveNote}
+          categories={categories}
+        />
+      </div>
     </SidebarProvider>
   );
 }

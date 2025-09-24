@@ -16,16 +16,17 @@ import { useRouter } from "next/navigation";
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignIn = () => {
-    // In a real app, you would validate credentials.
-    // Here, we'll just log in with a mock user.
-    login({ displayName: 'Demo User', email });
+  const handleSignUp = () => {
+    // In a real app, you would create a new user.
+    // Here, we'll just log in with the new user's details.
+    login({ displayName, email });
     router.push("/");
   };
 
@@ -33,12 +34,23 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign In</CardTitle>
+          <CardTitle className="text-2xl">Sign Up</CardTitle>
           <CardDescription>
-            Enter your email below to sign in to your account.
+            Enter your details to create a new account.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="displayName">Name</Label>
+            <Input 
+              id="displayName" 
+              type="text" 
+              placeholder="Your Name" 
+              required 
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input 
@@ -62,11 +74,11 @@ export default function LoginPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col">
-          <Button className="w-full" onClick={handleSignIn}>Sign In</Button>
+          <Button className="w-full" onClick={handleSignUp}>Sign Up</Button>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline">
-              Sign up
+            Already have an account?{' '}
+            <Link href="/login" className="underline">
+              Sign in
             </Link>
           </div>
         </CardFooter>

@@ -235,16 +235,20 @@ export function NotesPage() {
               />
             </div>
              {user ? (
-              <>
+              <div className="flex items-center gap-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
+                        <AvatarFallback>{(user.displayName || user.email)?.[0]}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuItem disabled>
+                      <span className="font-medium truncate">{user.displayName || user.email}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => router.push('/signup')}>
                       <UserPlus className="mr-2 h-4 w-4" />
                       <span>Create User</span>
@@ -260,7 +264,7 @@ export function NotesPage() {
                   <Plus className="mr-2 h-4 w-4" />
                   New Note
                 </Button>
-              </>
+              </div>
             ) : (
               <Link href="/login">
                 <Button variant="outline">Sign In</Button>

@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -18,22 +19,41 @@ interface NoteCardProps {
   category?: Category;
   onEdit: () => void;
   onDelete: () => void;
+  onView: () => void;
   isLoggedIn: boolean;
 }
 
-export function NoteCard({ note, category, onEdit, onDelete, isLoggedIn }: NoteCardProps) {
+export function NoteCard({ note, category, onEdit, onDelete, onView, isLoggedIn }: NoteCardProps) {
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-lg font-bold font-headline">{note.title}</CardTitle>
-              {category && (
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-                  <span className="text-xs text-muted-foreground">{category.name}</span>
+      <div className="flex-grow cursor-pointer" onClick={onView}>
+        <CardHeader>
+            <CardTitle className="text-lg font-bold font-headline">{note.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <p className="text-sm text-muted-foreground line-clamp-4">{note.content}</p>
+        </CardContent>
+      </div>
+      <CardFooter className="flex flex-col items-start gap-4 pt-4">
+        <div className="flex justify-between items-end w-full">
+            <div className="flex flex-col gap-2 items-start">
+                 {category && (
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+                        <span className="text-xs text-muted-foreground">{category.name}</span>
+                    </div>
+                 )}
+                 <div className="flex flex-wrap gap-2">
+                    {note.tags.map(tag => (
+                        <Badge key={tag} variant="secondary" style={{
+                        backgroundColor: category?.color ? `${category.color}20` : undefined,
+                        color: category?.color
+                        }}>{tag}</Badge>
+                    ))}
                 </div>
-              )}
+                <div className="text-xs text-muted-foreground pt-2">
+                    {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                </div>
             </div>
             {isLoggedIn && (
               <DropdownMenu>
@@ -54,22 +74,6 @@ export function NoteCard({ note, category, onEdit, onDelete, isLoggedIn }: NoteC
                   </DropdownMenuContent>
               </DropdownMenu>
             )}
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground line-clamp-4">{note.content}</p>
-      </CardContent>
-      <CardFooter className="flex flex-col items-start gap-4">
-        <div className="flex flex-wrap gap-2">
-          {note.tags.map(tag => (
-            <Badge key={tag} variant="secondary" style={{
-              backgroundColor: category?.color ? `${category.color}20` : undefined,
-              color: category?.color
-            }}>{tag}</Badge>
-          ))}
-        </div>
-        <div className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
         </div>
       </CardFooter>
     </Card>

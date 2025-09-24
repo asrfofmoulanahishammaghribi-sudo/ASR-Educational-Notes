@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, type ChangeEvent, useEffect } from 'react';
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { AppSidebar } from '@/components/app-sidebar';
 import { NoteList } from '@/components/note-list';
 import { NoteEditor } from '@/components/note-editor';
+import { NoteViewer } from '@/components/note-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { 
   getNotes, 
@@ -35,6 +37,8 @@ export function NotesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditorOpen, setEditorOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [isViewerOpen, setViewerOpen] = useState(false);
+  const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const { toast } = useToast();
@@ -93,6 +97,11 @@ export function NotesPage() {
     setEditingNote(note);
     setEditorOpen(true);
   };
+
+  const handleViewNote = (note: Note) => {
+    setViewingNote(note);
+    setViewerOpen(true);
+  }
   
   const handleDeleteNote = async (noteId: string) => {
     if (!isLoggedIn) return;
@@ -296,6 +305,7 @@ export function NotesPage() {
                   categories={allCategories} 
                   onEdit={handleEditNote} 
                   onDelete={handleDeleteNote}
+                  onView={handleViewNote}
                   isLoggedIn={isLoggedIn}
                 />
             )}
@@ -309,6 +319,13 @@ export function NotesPage() {
           note={editingNote}
           onSave={handleSaveNote}
           categories={categories}
+        />
+
+        <NoteViewer
+          isOpen={isViewerOpen}
+          onOpenChange={setViewerOpen}
+          note={viewingNote}
+          category={allCategories.find(c => c.id === viewingNote?.categoryId)}
         />
       </div>
     </SidebarProvider>

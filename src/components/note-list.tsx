@@ -1,3 +1,4 @@
+
 import { Note, Category } from '@/lib/data';
 import { NoteCard } from './note-card';
 
@@ -6,10 +7,11 @@ interface NoteListProps {
   categories: Category[];
   onEdit: (note: Note) => void;
   onDelete: (noteId: string) => void;
+  onView: (note: Note) => void;
   isLoggedIn: boolean;
 }
 
-export function NoteList({ notes, categories, onEdit, onDelete, isLoggedIn }: NoteListProps) {
+export function NoteList({ notes, categories, onEdit, onDelete, onView, isLoggedIn }: NoteListProps) {
   if (notes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
@@ -28,6 +30,7 @@ export function NoteList({ notes, categories, onEdit, onDelete, isLoggedIn }: No
           category={categories.find(c => c.id === note.categoryId)}
           onEdit={() => onEdit(note)}
           onDelete={() => onDelete(note.id)}
+          onView={() => onView(note)}
           isLoggedIn={isLoggedIn}
         />
       ))}

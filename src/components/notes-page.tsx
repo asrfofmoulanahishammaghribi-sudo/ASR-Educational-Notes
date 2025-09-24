@@ -2,6 +2,7 @@
 
 import { useState, useMemo, type ChangeEvent } from 'react';
 import { Plus } from 'lucide-react';
+import Link from 'next/link';
 
 import { initialNotes, initialCategories, type Note, type Category } from '@/lib/data';
 import {
@@ -119,6 +120,9 @@ export function NotesPage() {
                 className="w-full md:w-1/2 lg:w-1/3"
               />
             </div>
+            <Link href="/login">
+              <Button variant="outline">Sign In</Button>
+            </Link>
             <Button onClick={handleNewNote} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               <Plus className="mr-2 h-4 w-4" />
               New Note

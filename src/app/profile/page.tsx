@@ -18,6 +18,29 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { ColorPicker } from "@/components/color-picker";
+
+const PRIMARY_COLORS = [
+  "210 29% 29%",
+  "262 82% 57%",
+  "347 77% 66%",
+  "160 60% 45%",
+  "30 80% 55%",
+];
+const BACKGROUND_COLORS = [
+  "210 27% 18%",
+  "220 13% 18%",
+  "215 28% 17%",
+  "224 71% 4%",
+  "240 10% 4%",
+];
+const ACCENT_COLORS = [
+  "282 44% 47%",
+  "262 82% 57%",
+  "347 77% 66%",
+  "22 96% 54%",
+  "142 71% 45%",
+];
 
 export default function ProfilePage() {
   const { user, login } = useAuth();
@@ -27,9 +50,9 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("210 29% 29%");
-  const [backgroundColor, setBackgroundColor] = useState("210 27% 18%");
-  const [accentColor, setAccentColor] = useState("282 44% 47%");
+  const [primaryColor, setPrimaryColor] = useState(PRIMARY_COLORS[0]);
+  const [backgroundColor, setBackgroundColor] = useState(BACKGROUND_COLORS[0]);
+  const [accentColor, setAccentColor] = useState(ACCENT_COLORS[0]);
 
   useEffect(() => {
     if (user) {
@@ -138,31 +161,31 @@ export default function ProfilePage() {
           <Separator />
           <div>
             <h3 className="text-lg font-medium">Theme</h3>
-            <p className="text-sm text-muted-foreground">Customize your app's appearance. Enter HSL values (e.g., 210 40% 98%).</p>
+            <p className="text-sm text-muted-foreground">Customize your app's appearance.</p>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="primary-color">Primary Color</Label>
-            <Input 
-              id="primary-color"
-              value={primaryColor}
-              onChange={(e) => setPrimaryColor(e.target.value)}
-            />
+            <Label>Primary Color</Label>
+            <ColorPicker
+                colors={PRIMARY_COLORS}
+                selectedColor={primaryColor}
+                onSelectColor={setPrimaryColor}
+              />
           </div>
            <div className="grid gap-2">
-            <Label htmlFor="background-color">Background Color</Label>
-            <Input 
-              id="background-color"
-              value={backgroundColor}
-              onChange={(e) => setBackgroundColor(e.target.value)}
-            />
+            <Label>Background Color</Label>
+             <ColorPicker
+                colors={BACKGROUND_COLORS}
+                selectedColor={backgroundColor}
+                onSelectColor={setBackgroundColor}
+              />
           </div>
            <div className="grid gap-2">
-            <Label htmlFor="accent-color">Accent Color</Label>
-            <Input 
-              id="accent-color"
-              value={accentColor}
-              onChange={(e) => setAccentColor(e.target.value)}
-            />
+            <Label>Accent Color</Label>
+             <ColorPicker
+                colors={ACCENT_COLORS}
+                selectedColor={accentColor}
+                onSelectColor={setAccentColor}
+              />
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">

@@ -23,7 +23,7 @@ import {
   saveAllCategories,
   deleteCategory as deleteCategoryFromDb,
 } from '@/lib/firebase-services';
-import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { AuthProvider, useAuth } from '@/hooks/use-auth.tsx';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback } from './ui/avatar';
 

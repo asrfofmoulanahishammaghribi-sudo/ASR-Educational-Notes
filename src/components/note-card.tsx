@@ -18,9 +18,10 @@ interface NoteCardProps {
   category?: Category;
   onEdit: () => void;
   onDelete: () => void;
+  isLoggedIn: boolean;
 }
 
-export function NoteCard({ note, category, onEdit, onDelete }: NoteCardProps) {
+export function NoteCard({ note, category, onEdit, onDelete, isLoggedIn }: NoteCardProps) {
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
       <CardHeader>
@@ -34,23 +35,25 @@ export function NoteCard({ note, category, onEdit, onDelete }: NoteCardProps) {
                 </div>
               )}
             </div>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                        <MoreVertical className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onClick={onEdit}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Edit</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onDelete} className="text-red-500">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            {isLoggedIn && (
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                          <MoreVertical className="h-4 w-4" />
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                      <DropdownMenuItem onClick={onEdit}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>Edit</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onDelete} className="text-red-500">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete</span>
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+            )}
         </div>
       </CardHeader>
       <CardContent className="flex-grow">

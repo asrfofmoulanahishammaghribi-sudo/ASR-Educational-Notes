@@ -40,9 +40,12 @@ export function NotesPage() {
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const router = useRouter();
+
+  const isLoggedIn = !!user;
   
   useEffect(() => {
     async function loadData() {
+      setIsLoading(true);
       try {
         const [notesFromDb, categoriesFromDb] = await Promise.all([getNotes(), getCategories()]);
         setNotes(notesFromDb);
@@ -80,16 +83,19 @@ export function NotesPage() {
   }, [notes, searchTerm]);
 
   const handleNewNote = () => {
+    if (!isLoggedIn) return;
     setEditingNote(null);
     setEditorOpen(true);
   };
 
   const handleEditNote = (note: Note) => {
+    if (!isLoggedIn) return;
     setEditingNote(note);
     setEditorOpen(true);
   };
   
   const handleDeleteNote = async (noteId: string) => {
+    if (!isLoggedIn) return;
     try {
       await deleteNoteFromDb(noteId);
       setNotes(prev => prev.filter(n => n.id !== noteId));
@@ -104,6 +110,7 @@ export function NotesPage() {
   };
 
   const handleSaveNote = async (noteToSave: Note) => {
+    if (!isLoggedIn) return;
     const isNewNote = !editingNote;
     try {
         await saveNoteToDb(noteToSave);
@@ -125,6 +132,7 @@ export function NotesPage() {
   };
   
   const handleSaveCategory = async (categoryToSave: Category, parentId?: string) => {
+    if (!isLoggedIn) return;
     let updatedCategories = [...categories];
     if (parentId) {
       const addSubCategory = (cats: Category[]): Category[] => {
@@ -166,6 +174,7 @@ export function NotesPage() {
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
+    if (!isLoggedIn) return;
     const notesExist = notes.some(n => {
         if (n.categoryId === categoryId) return true;
         const parentCategory = categories.find(c => c.subCategories?.some(sc => sc.id === categoryId));
@@ -222,6 +231,7 @@ export function NotesPage() {
           categories={categories}
           onSaveCategory={handleSaveCategory}
           onDeleteCategory={handleDeleteCategory}
+          isLoggedIn={isLoggedIn}
         />
         <SidebarInset className="flex-1 flex flex-col bg-background">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
@@ -281,7 +291,13 @@ export function NotesPage() {
                     <h2 className="text-2xl font-semibold">Loading your notes...</h2>
                  </div>
             ) : (
-                <NoteList notes={filteredNotes} categories={allCategories} onEdit={handleEditNote} onDelete={handleDeleteNote} />
+                <NoteList 
+                  notes={filteredNotes} 
+                  categories={allCategories} 
+                  onEdit={handleEditNote} 
+                  onDelete={handleDeleteNote}
+                  isLoggedIn={isLoggedIn}
+                />
             )}
           </main>
         </SidebarInset>

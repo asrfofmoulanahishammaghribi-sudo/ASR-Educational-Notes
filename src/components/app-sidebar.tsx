@@ -28,9 +28,10 @@ interface AppSidebarProps {
   categories: Category[];
   onSaveCategory: (category: Category, parentId?: string) => void;
   onDeleteCategory: (categoryId: string) => void;
+  isLoggedIn: boolean;
 }
 
-export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: AppSidebarProps) {
+export function AppSidebar({ categories, onSaveCategory, onDeleteCategory, isLoggedIn }: AppSidebarProps) {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
@@ -39,6 +40,7 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
 
   const handleOpenCategoryModal = (category?: Category, parentId?: string) => {
+    if (!isLoggedIn) return;
     if (category) {
       setEditingCategory(category);
       setCategoryName(category.name);
@@ -83,33 +85,35 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
             <span>{category.name}</span>
           </SidebarMenuButton>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuAction showOnHover>
-              <MoreVertical />
-            </SidebarMenuAction>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => handleOpenCategoryModal(category)}>
-              <Edit className="mr-2 h-4 w-4" />
-              <span>Edit</span>
-            </DropdownMenuItem>
-             {!isSubcategory && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleOpenCategoryModal(undefined, category.id)}>
-                  <FolderPlus className="mr-2 h-4 w-4" />
-                  <span>Add Sub-category</span>
-                </DropdownMenuItem>
-              </>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onDeleteCategory(category.id)} className="text-red-500">
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {isLoggedIn && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuAction showOnHover>
+                <MoreVertical />
+              </SidebarMenuAction>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleOpenCategoryModal(category)}>
+                <Edit className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+               {!isSubcategory && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleOpenCategoryModal(undefined, category.id)}>
+                    <FolderPlus className="mr-2 h-4 w-4" />
+                    <span>Add Sub-category</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onDeleteCategory(category.id)} className="text-red-500">
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </SidebarMenuItem>
       {category.subCategories && category.subCategories.length > 0 && (
         <CollapsibleContent>
@@ -137,12 +141,14 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-          <Button variant="ghost" className="w-full justify-start" onClick={() => handleOpenCategoryModal()}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Category
-          </Button>
-        </SidebarFooter>
+        {isLoggedIn && (
+          <SidebarFooter>
+            <Button variant="ghost" className="w-full justify-start" onClick={() => handleOpenCategoryModal()}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Category
+            </Button>
+          </SidebarFooter>
+        )}
       </Sidebar>
 
       <Dialog open={isCategoryModalOpen} onOpenChange={setCategoryModalOpen}>

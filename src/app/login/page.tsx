@@ -14,18 +14,47 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { getUser } from "@/lib/firebase-services";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignIn = () => {
-    // In a real app, you would validate credentials.
-    // Here, we'll just log in with a mock user.
-    login({ displayName: 'Demo User', email });
-    router.push("/");
+  const handleSignIn = async () => {
+    if (!email) {
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "Please enter your email.",
+        });
+        return;
+    }
+    
+    // In a real app, you would also validate the password against a backend.
+    
+    try {
+        const userFromDb = await getUser(email);
+        
+        if (userFromDb) {
+            login(userFromDb);
+        } else {
+            // If user doesn't exist, log them in with a default profile.
+            // They can update their details on the profile page.
+            login({ displayName: '', email });
+        }
+        router.push("/");
+    } catch (error) {
+        console.error("Login error:", error);
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "An error occurred during sign-in. Please try again.",
+        });
+    }
   };
 
   return (

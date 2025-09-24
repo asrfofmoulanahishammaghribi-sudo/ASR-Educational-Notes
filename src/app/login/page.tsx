@@ -12,8 +12,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  const handleSignIn = () => {
+    // Placeholder for actual sign-in logic
+    router.push("/");
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm">
@@ -34,7 +42,7 @@ export default function LoginPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col">
-          <Button className="w-full">Sign In</Button>
+          <Button className="w-full" onClick={handleSignIn}>Sign In</Button>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
             <Link href="#" className="underline">

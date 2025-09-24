@@ -235,35 +235,37 @@ export function NotesPage() {
               />
             </div>
              {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuItem onClick={() => router.push('/signup')}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    <span>Create User</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuItem onClick={() => router.push('/signup')}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      <span>Create User</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button onClick={handleNewNote} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Note
+                </Button>
+              </>
             ) : (
               <Link href="/login">
                 <Button variant="outline">Sign In</Button>
               </Link>
             )}
-            <Button onClick={handleNewNote} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              <Plus className="mr-2 h-4 w-4" />
-              New Note
-            </Button>
           </header>
           <main className="flex-1 p-4 md:p-6">
             {isLoading ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, type ChangeEvent, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { initialNotes, initialCategories, type Note, type Category } from '@/lib/data';
 import {
@@ -23,8 +23,12 @@ import {
   saveAllCategories,
   deleteCategory as deleteCategoryFromDb,
 } from '@/lib/firebase-services';
+import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
-export function NotesPage() {
+
+function NotesPageContent() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +37,7 @@ export function NotesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const { toast } = useToast();
+  const { user, logout } = useAuth();
   
   useEffect(() => {
     async function loadData() {
@@ -40,7 +45,7 @@ export function NotesPage() {
         const [notesFromDb, categoriesFromDb] = await Promise.all([getNotes(), getCategories()]);
         setNotes(notesFromDb);
         // temp logic to seed categories if db is empty
-        if (categoriesFromDb.length === 0) {
+        if (categoriesFromDb.length === 0 && initialCategories.length > 0) {
             setCategories(initialCategories);
             await saveAllCategories(initialCategories);
         } else {
@@ -159,7 +164,13 @@ export function NotesPage() {
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (notes.some(n => n.categoryId === categoryId)) {
+    const notesExist = notes.some(n => {
+        if (n.categoryId === categoryId) return true;
+        const parentCategory = categories.find(c => c.subCategories?.some(sc => sc.id === categoryId));
+        return parentCategory?.subCategories?.some(sc => sc.id === n.categoryId);
+    });
+
+    if (notesExist) {
       toast({
         variant: "destructive",
         title: "Cannot delete category",
@@ -221,9 +232,27 @@ export function NotesPage() {
                 className="w-full md:w-1/2 lg:w-1/3"
               />
             </div>
-            <Link href="/login">
-              <Button variant="outline">Sign In</Button>
-            </Link>
+             {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/login">
+                <Button variant="outline">Sign In</Button>
+              </Link>
+            )}
             <Button onClick={handleNewNote} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               <Plus className="mr-2 h-4 w-4" />
               New Note
@@ -249,5 +278,13 @@ export function NotesPage() {
         categories={categories}
       />
     </SidebarProvider>
+  );
+}
+
+export function NotesPage() {
+  return (
+    <AuthProvider>
+      <NotesPageContent />
+    </AuthProvider>
   );
 }

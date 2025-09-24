@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
@@ -63,12 +62,6 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col">
           <Button className="w-full" onClick={handleSignIn}>Sign In</Button>
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline">
-              Sign up
-            </Link>
-          </div>
         </CardFooter>
       </Card>
     </div>

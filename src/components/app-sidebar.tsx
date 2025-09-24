@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/color-picker';
 import { Category, CATEGORY_COLORS } from '@/lib/data';
-import { Archive, Plus, Trash2, Edit, MoreVertical, ChevronRight, FolderPlus } from 'lucide-react';
+import { Plus, Trash2, Edit, MoreVertical, ChevronRight, FolderPlus } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,21 @@ interface AppSidebarProps {
   onSaveCategory: (category: Category, parentId?: string) => void;
   onDeleteCategory: (categoryId: string) => void;
 }
+
+const AsrLogo = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    className="w-8 h-8 text-green-500"
+    fill="currentColor"
+  >
+    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+    <path d="M12 4a8.2 8.2 0 0 0-5.1 1.7L12 11l5.1-5.3A8.2 8.2 0 0 0 12 4zm0 14a6 6 0 0 1-4.2-1.8L12 12l4.2 4.2A6 6 0 0 1 12 18z" />
+    <path d="M11 12.5V17h2v-4.5a2.5 2.5 0 0 0-2 0z" />
+    <path d="M8.5 7.5a1 1 0 1 0-1-1 1 1 0 0 0 1 1zM16.5 7.5a1 1 0 1 0-1-1 1 1 0 0 0 1 1zM6.5 11.5a1 1 0 1 0-1-1 1 1 0 0 0 1 1zM18.5 11.5a1 1 0 1 0-1-1 1 1 0 0 0 1 1z" />
+  </svg>
+);
+
 
 export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: AppSidebarProps) {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -126,7 +141,7 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
       <Sidebar>
         <SidebarHeader className='p-4'>
           <div className="flex items-center gap-2">
-            <Archive className="w-6 h-6 text-accent" />
+            <AsrLogo />
             <h1 className="text-xl font-headline font-bold">ASR Notes</h1>
           </div>
         </SidebarHeader>

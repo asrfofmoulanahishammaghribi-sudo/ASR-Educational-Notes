@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, type ChangeEvent, useEffect } from 'react';
-import { Plus, LogOut, UserPlus } from 'lucide-react';
+import { Plus, LogOut, UserPlus, User } from 'lucide-react';
 import Link from 'next/link';
 import { initialNotes, initialCategories, type Note, type Category } from '@/lib/data';
 import {
@@ -249,6 +249,10 @@ export function NotesPage() {
                       <span className="font-medium truncate">{user.displayName || user.email}</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/signup')}>
                       <UserPlus className="mr-2 h-4 w-4" />
                       <span>Create User</span>
@@ -267,7 +271,7 @@ export function NotesPage() {
               </div>
             ) : (
               <Link href="/login">
-                <Button variant="outline">Sign In</Button>
+                <Button>Sign In</Button>
               </Link>
             )}
           </header>

@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useMemo, type ChangeEvent } from 'react';
+import { useState, useMemo, type ChangeEvent, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-
 import { initialNotes, initialCategories, type Note, type Category } from '@/lib/data';
 import {
   SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
@@ -19,15 +15,50 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { NoteList } from '@/components/note-list';
 import { NoteEditor } from '@/components/note-editor';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  getNotes, 
+  saveNote as saveNoteToDb, 
+  deleteNote as deleteNoteFromDb,
+  getCategories,
+  saveAllCategories,
+  deleteCategory as deleteCategoryFromDb,
+} from '@/lib/firebase-services';
 
 export function NotesPage() {
-  const [notes, setNotes] = useState<Note[]>(initialNotes);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditorOpen, setEditorOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const { toast } = useToast();
+  
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [notesFromDb, categoriesFromDb] = await Promise.all([getNotes(), getCategories()]);
+        setNotes(notesFromDb);
+        // temp logic to seed categories if db is empty
+        if (categoriesFromDb.length === 0) {
+            setCategories(initialCategories);
+            await saveAllCategories(initialCategories);
+        } else {
+            setCategories(categoriesFromDb);
+        }
+      } catch (error) {
+        console.error("Error loading data from Firestore:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load data from the database.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, [toast]);
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -51,45 +82,52 @@ export function NotesPage() {
     setEditorOpen(true);
   };
   
-  const handleDeleteNote = (noteId: string) => {
-    setNotes(prev => prev.filter(n => n.id !== noteId));
-    toast({
-      title: "Note Deleted",
-      description: "The note has been successfully deleted.",
-    });
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNoteFromDb(noteId);
+      setNotes(prev => prev.filter(n => n.id !== noteId));
+      toast({
+        title: "Note Deleted",
+        description: "The note has been successfully deleted.",
+      });
+    } catch(error) {
+       console.error("Error deleting note:", error);
+       toast({ variant: "destructive", title: "Error", description: "Could not delete note." });
+    }
   };
 
-  const handleSaveNote = (noteToSave: Note) => {
-    if (editingNote) {
-      setNotes(notes.map(n => n.id === noteToSave.id ? noteToSave : n));
-       toast({
-        title: "Note Updated",
-        description: "Your note has been successfully updated.",
-      });
-    } else {
-      setNotes([noteToSave, ...notes]);
-       toast({
-        title: "Note Created",
-        description: "Your new note has been successfully created.",
-      });
+  const handleSaveNote = async (noteToSave: Note) => {
+    const isNewNote = !editingNote;
+    try {
+        await saveNoteToDb(noteToSave);
+        if (isNewNote) {
+            setNotes([noteToSave, ...notes]);
+        } else {
+            setNotes(notes.map(n => n.id === noteToSave.id ? noteToSave : n));
+        }
+        toast({
+            title: isNewNote ? "Note Created" : "Note Updated",
+            description: `Your note has been successfully ${isNewNote ? 'created' : 'updated'}.`,
+        });
+        setEditorOpen(false);
+        setEditingNote(null);
+    } catch(error) {
+        console.error("Error saving note:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not save note." });
     }
-    setEditorOpen(false);
-    setEditingNote(null);
   };
   
-  const handleSaveCategory = (categoryToSave: Category, parentId?: string) => {
+  const handleSaveCategory = async (categoryToSave: Category, parentId?: string) => {
+    let updatedCategories = [...categories];
     if (parentId) {
-      // It's a sub-category
       const addSubCategory = (cats: Category[]): Category[] => {
         return cats.map(c => {
           if (c.id === parentId) {
             const existingSub = c.subCategories?.find(sc => sc.id === categoryToSave.id);
             if (existingSub) {
-              // Update existing sub-category
               const updatedSubCategories = c.subCategories?.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc);
               return { ...c, subCategories: updatedSubCategories };
             } else {
-              // Add new sub-category
               const newSubCategories = [...(c.subCategories || []), categoryToSave];
               return { ...c, subCategories: newSubCategories };
             }
@@ -100,22 +138,27 @@ export function NotesPage() {
           return c;
         });
       };
-      setCategories(addSubCategory(categories));
-      toast({ title: parentId ? "Sub-category Saved" : "Category Saved" });
+      updatedCategories = addSubCategory(updatedCategories);
     } else {
-      // It's a top-level category
       const isNew = !categories.some(c => c.id === categoryToSave.id);
       if (isNew) {
-        setCategories([...categories, categoryToSave]);
-        toast({ title: "Category Created" });
+        updatedCategories.push(categoryToSave);
       } else {
-        setCategories(categories.map(c => c.id === categoryToSave.id ? categoryToSave : c));
-        toast({ title: "Category Updated" });
+        updatedCategories = categories.map(c => c.id === categoryToSave.id ? categoryToSave : c);
       }
+    }
+
+    try {
+      await saveAllCategories(updatedCategories);
+      setCategories(updatedCategories);
+      toast({ title: "Category Saved" });
+    } catch (error) {
+      console.error("Error saving categories:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not save categories." });
     }
   }
 
-  const handleDeleteCategory = (categoryId: string) => {
+  const handleDeleteCategory = async (categoryId: string) => {
     if (notes.some(n => n.categoryId === categoryId)) {
       toast({
         variant: "destructive",
@@ -134,8 +177,15 @@ export function NotesPage() {
         });
     };
 
-    setCategories(prev => removeCategory(prev, categoryId));
-    toast({ title: "Category Deleted" });
+    const updatedCategories = removeCategory(categories, categoryId);
+    try {
+      await saveAllCategories(updatedCategories); // We resave the whole tree to remove one
+      setCategories(updatedCategories);
+      toast({ title: "Category Deleted" });
+    } catch (error) {
+       console.error("Error deleting category:", error);
+       toast({ variant: "destructive", title: "Error", description: "Could not delete category." });
+    }
   }
   
   const allCategories = useMemo(() => {
@@ -180,7 +230,13 @@ export function NotesPage() {
             </Button>
           </header>
           <main className="flex-1 p-4 md:p-6">
-            <NoteList notes={filteredNotes} categories={allCategories} onEdit={handleEditNote} onDelete={handleDeleteNote} />
+            {isLoading ? (
+                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                    <h2 className="text-2xl font-semibold">Loading your notes...</h2>
+                 </div>
+            ) : (
+                <NoteList notes={filteredNotes} categories={allCategories} onEdit={handleEditNote} onDelete={handleDeleteNote} />
+            )}
           </main>
         </SidebarInset>
       </div>

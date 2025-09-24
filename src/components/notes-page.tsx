@@ -23,12 +23,12 @@ import {
   saveAllCategories,
   deleteCategory as deleteCategoryFromDb,
 } from '@/lib/firebase-services';
-import { AuthProvider, useAuth } from '@/hooks/use-auth.tsx';
+import { useAuth } from '@/hooks/use-auth';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
 
-function NotesPageContent() {
+export function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -278,13 +278,5 @@ function NotesPageContent() {
         categories={categories}
       />
     </SidebarProvider>
-  );
-}
-
-export function NotesPage() {
-  return (
-    <AuthProvider>
-      <NotesPageContent />
-    </AuthProvider>
   );
 }

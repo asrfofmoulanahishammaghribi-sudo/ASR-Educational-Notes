@@ -22,6 +22,7 @@ import { Plus, Trash2, Edit, MoreVertical, ChevronRight, FolderPlus } from 'luci
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { cn } from '@/lib/utils';
+import Logo from '@/images/logo';
 
 
 interface AppSidebarProps {
@@ -29,30 +30,6 @@ interface AppSidebarProps {
   onSaveCategory: (category: Category, parentId?: string) => void;
   onDeleteCategory: (categoryId: string) => void;
 }
-
-const AsrLogo = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    className="w-8 h-8 text-green-500"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z" />
-    <path d="M12 12v10" />
-    <path d="M12 12l-4-4" />
-    <path d="M12 12l4-4" />
-    <path d="M12 12l-4 4" />
-    <path d="M12 12l4 4" />
-    <path d="m15 12-3-3-3 3" />
-    <path d="M9 2a3 3 0 0 1 3 3v7" />
-    <path d="M15 2a3 3 0 0 0-3 3v7" />
-  </svg>
-);
-
 
 export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: AppSidebarProps) {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -150,7 +127,7 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
       <Sidebar>
         <SidebarHeader className='p-4'>
           <div className="flex items-center gap-2">
-            <AsrLogo />
+            <Logo />
             <h1 className="text-xl font-headline font-bold">ASR Notes</h1>
           </div>
         </SidebarHeader>

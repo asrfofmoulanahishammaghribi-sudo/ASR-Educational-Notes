@@ -16,6 +16,11 @@ import type { Note, Category } from './data';
 interface User {
   displayName: string;
   email: string;
+  theme?: {
+    primary: string;
+    background: string;
+    accent: string;
+  };
 }
 
 const NOTES_COLLECTION = 'notes';

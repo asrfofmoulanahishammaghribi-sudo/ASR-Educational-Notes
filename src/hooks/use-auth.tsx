@@ -2,9 +2,16 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+interface UserTheme {
+  primary: string;
+  background: string;
+  accent: string;
+}
+
 interface User {
   displayName: string;
   email: string;
+  theme?: UserTheme;
 }
 
 interface AuthContextType {
@@ -34,6 +41,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     localStorage.removeItem('user');
     setUser(null);
+    // Optional: Reset theme to default on logout
+    const root = document.documentElement;
+    root.style.removeProperty('--background');
+    root.style.removeProperty('--primary');
+    root.style.removeProperty('--accent');
   };
 
   return (

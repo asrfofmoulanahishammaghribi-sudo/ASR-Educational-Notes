@@ -17,6 +17,7 @@ import { saveUser } from "@/lib/firebase-services";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Separator } from "@/components/ui/separator";
 
 export default function ProfilePage() {
   const { user, login } = useAuth();
@@ -26,10 +27,18 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("210 29% 29%");
+  const [backgroundColor, setBackgroundColor] = useState("210 27% 18%");
+  const [accentColor, setAccentColor] = useState("282 44% 47%");
 
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName);
+      if (user.theme) {
+        setPrimaryColor(user.theme.primary);
+        setBackgroundColor(user.theme.background);
+        setAccentColor(user.theme.accent);
+      }
     } else {
       // Redirect to login if not authenticated
       router.push('/login');
@@ -48,7 +57,15 @@ export default function ProfilePage() {
       return;
     }
     
-    const updatedUser = { ...user, displayName };
+    const updatedUser = { 
+        ...user, 
+        displayName, 
+        theme: {
+            primary: primaryColor,
+            background: backgroundColor,
+            accent: accentColor,
+        } 
+    };
     
     try {
       await saveUser(updatedUser);
@@ -83,7 +100,7 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="text-2xl">User Profile</CardTitle>
           <CardDescription>
-            Manage your account settings.
+            Manage your account settings and theme preferences.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
@@ -116,6 +133,35 @@ export default function ProfilePage() {
               type="password" 
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+          <Separator />
+          <div>
+            <h3 className="text-lg font-medium">Theme</h3>
+            <p className="text-sm text-muted-foreground">Customize your app's appearance. Enter HSL values (e.g., 210 40% 98%).</p>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="primary-color">Primary Color</Label>
+            <Input 
+              id="primary-color"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+            />
+          </div>
+           <div className="grid gap-2">
+            <Label htmlFor="background-color">Background Color</Label>
+            <Input 
+              id="background-color"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+          </div>
+           <div className="grid gap-2">
+            <Label htmlFor="accent-color">Accent Color</Label>
+            <Input 
+              id="accent-color"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
             />
           </div>
         </CardContent>

@@ -22,7 +22,6 @@ import { Plus, Trash2, Edit, MoreVertical, ChevronRight, FolderPlus } from 'luci
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { cn } from '@/lib/utils';
-import Logo from '@/images/logo';
 
 
 interface AppSidebarProps {
@@ -126,8 +125,7 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
     <>
       <Sidebar>
         <SidebarHeader className='p-4'>
-          <div className="flex items-center gap-2">
-            <Logo />
+          <div className="flex items-center">
             <h1 className="text-xl font-headline font-bold">ASR Notes</h1>
           </div>
         </SidebarHeader>

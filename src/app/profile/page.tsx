@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { saveUser } from "@/lib/firebase-services";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -35,7 +36,7 @@ export default function ProfilePage() {
     }
   }, [user, router]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!user) return;
 
     if (newPassword && newPassword !== confirmPassword) {
@@ -47,18 +48,28 @@ export default function ProfilePage() {
       return;
     }
     
-    // In a real app, you would also handle password change logic securely.
     const updatedUser = { ...user, displayName };
-    login(updatedUser);
+    
+    try {
+      await saveUser(updatedUser);
+      // Update local auth state as well
+      login(updatedUser);
 
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
 
-    // Optionally reset password fields after save
-    setNewPassword("");
-    setConfirmPassword("");
+      // Redirect to the notes page
+      router.push('/');
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not save your profile. Please try again.",
+      });
+    }
   };
 
   if (!user) {

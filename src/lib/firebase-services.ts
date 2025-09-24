@@ -7,12 +7,20 @@ import {
   writeBatch,
   query,
   orderBy,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Note, Category } from './data';
 
+// Define User type for database operations
+interface User {
+  displayName: string;
+  email: string;
+}
+
 const NOTES_COLLECTION = 'notes';
 const CATEGORIES_COLLECTION = 'categories';
+const USERS_COLLECTION = 'users';
 
 // Note Functions
 export async function getNotes(): Promise<Note[]> {
@@ -55,4 +63,20 @@ export async function saveAllCategories(categories: Category[]): Promise<void> {
 export async function deleteCategory(categoryId: string): Promise<void> {
   const categoryRef = doc(db, CATEGORIES_COLLECTION, categoryId);
   await deleteDoc(categoryRef);
+}
+
+// User Functions
+export async function saveUser(user: User): Promise<void> {
+  // Use email as the document ID for simplicity
+  const userRef = doc(db, USERS_COLLECTION, user.email);
+  await setDoc(userRef, user, { merge: true });
+}
+
+export async function getUser(email: string): Promise<User | null> {
+  const userRef = doc(db, USERS_COLLECTION, email);
+  const docSnap = await getDoc(userRef);
+  if (docSnap.exists()) {
+    return docSnap.data() as User;
+  }
+  return null;
 }

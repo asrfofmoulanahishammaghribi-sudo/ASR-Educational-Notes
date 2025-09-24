@@ -12,6 +12,7 @@ export interface Category {
   id: string;
   name: string;
   color: string;
+  subCategories?: Category[];
 }
 
 export interface Attachment {
@@ -33,7 +34,15 @@ export interface Note {
 }
 
 export const initialCategories: Category[] = [
-  { id: 'cat-1', name: 'Software Engineering', color: '#2980B9' },
+  { 
+    id: 'cat-1', 
+    name: 'Software Engineering', 
+    color: '#2980B9',
+    subCategories: [
+      { id: 'sub-cat-1', name: 'Frontend', color: '#2980B9' },
+      { id: 'sub-cat-2', name: 'Backend', color: '#2980B9' },
+    ]
+  },
   { id: 'cat-2', name: 'Project Management', color: '#27AE60' },
   { id: 'cat-3', name: 'Personal Development', color: '#8E44AD' },
 ];
@@ -43,7 +52,7 @@ export const initialNotes: Note[] = [
     id: 'note-1',
     title: 'Understanding React Hooks',
     content: 'React Hooks are functions that let you "hook into" React state and lifecycle features from function components. `useState` is for state, `useEffect` for side effects. They must be called at the top level of your components.',
-    categoryId: 'cat-1',
+    categoryId: 'sub-cat-1',
     tags: ['react', 'frontend', 'javascript'],
     attachments: [
       { id: 'att-1', name: 'react-cheatsheet.pdf', type: 'pdf', url: '#', size: '1.2MB' },
@@ -75,7 +84,7 @@ export const initialNotes: Note[] = [
     id: 'note-4',
     title: 'Database Design Principles',
     content: 'Normalization is the process of organizing columns and tables in a relational database to minimize data redundancy. The first three normal forms (1NF, 2NF, 3NF) are the most common.',
-    categoryId: 'cat-1',
+    categoryId: 'sub-cat-2',
     tags: ['database', 'sql', 'normalization'],
     attachments: [],
     createdAt: '2023-10-23T11:00:00Z',

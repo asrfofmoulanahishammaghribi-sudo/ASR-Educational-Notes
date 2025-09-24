@@ -77,29 +77,80 @@ export function NotesPage() {
     setEditingNote(null);
   };
   
-  const handleSaveCategory = (categoryToSave: Category) => {
-     const isNew = !categories.some(c => c.id === categoryToSave.id);
-     if (isNew) {
-       setCategories([...categories, categoryToSave]);
-       toast({ title: "Category Created" });
-     } else {
-       setCategories(categories.map(c => c.id === categoryToSave.id ? categoryToSave : c));
-       toast({ title: "Category Updated" });
-     }
+  const handleSaveCategory = (categoryToSave: Category, parentId?: string) => {
+    if (parentId) {
+      // It's a sub-category
+      const addSubCategory = (cats: Category[]): Category[] => {
+        return cats.map(c => {
+          if (c.id === parentId) {
+            const existingSub = c.subCategories?.find(sc => sc.id === categoryToSave.id);
+            if (existingSub) {
+              // Update existing sub-category
+              const updatedSubCategories = c.subCategories?.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc);
+              return { ...c, subCategories: updatedSubCategories };
+            } else {
+              // Add new sub-category
+              const newSubCategories = [...(c.subCategories || []), categoryToSave];
+              return { ...c, subCategories: newSubCategories };
+            }
+          }
+          if (c.subCategories) {
+            return { ...c, subCategories: addSubCategory(c.subCategories) };
+          }
+          return c;
+        });
+      };
+      setCategories(addSubCategory(categories));
+      toast({ title: parentId ? "Sub-category Saved" : "Category Saved" });
+    } else {
+      // It's a top-level category
+      const isNew = !categories.some(c => c.id === categoryToSave.id);
+      if (isNew) {
+        setCategories([...categories, categoryToSave]);
+        toast({ title: "Category Created" });
+      } else {
+        setCategories(categories.map(c => c.id === categoryToSave.id ? categoryToSave : c));
+        toast({ title: "Category Updated" });
+      }
+    }
   }
 
   const handleDeleteCategory = (categoryId: string) => {
     if (notes.some(n => n.categoryId === categoryId)) {
-        toast({
-            variant: "destructive",
-            title: "Cannot delete category",
-            description: "Please reassign or delete notes in this category first.",
-        });
-        return;
+      toast({
+        variant: "destructive",
+        title: "Cannot delete category",
+        description: "Please reassign or delete notes in this category first.",
+      });
+      return;
     }
-    setCategories(prev => prev.filter(c => c.id !== categoryId));
+
+    const removeCategory = (cats: Category[], id: string): Category[] => {
+        return cats.filter(c => c.id !== id).map(c => {
+            if (c.subCategories) {
+                return { ...c, subCategories: removeCategory(c.subCategories, id) };
+            }
+            return c;
+        });
+    };
+
+    setCategories(prev => removeCategory(prev, categoryId));
     toast({ title: "Category Deleted" });
   }
+  
+  const allCategories = useMemo(() => {
+      const flatCategories: Category[] = [];
+      const flatten = (cats: Category[]) => {
+          cats.forEach(c => {
+              flatCategories.push(c);
+              if (c.subCategories) {
+                  flatten(c.subCategories);
+              }
+          });
+      };
+      flatten(categories);
+      return flatCategories;
+  }, [categories]);
 
   return (
     <SidebarProvider>
@@ -129,7 +180,7 @@ export function NotesPage() {
             </Button>
           </header>
           <main className="flex-1 p-4 md:p-6">
-            <NoteList notes={filteredNotes} categories={categories} onEdit={handleEditNote} onDelete={handleDeleteNote} />
+            <NoteList notes={filteredNotes} categories={allCategories} onEdit={handleEditNote} onDelete={handleDeleteNote} />
           </main>
         </SidebarInset>
       </div>

@@ -18,12 +18,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/color-picker';
 import { Category, CATEGORY_COLORS } from '@/lib/data';
-import { Archive, Plus, Trash2, Edit, MoreVertical } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Archive, Plus, Trash2, Edit, MoreVertical, ChevronRight, FolderPlus } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { cn } from '@/lib/utils';
+
 
 interface AppSidebarProps {
   categories: Category[];
-  onSaveCategory: (category: Category) => void;
+  onSaveCategory: (category: Category, parentId?: string) => void;
   onDeleteCategory: (categoryId: string) => void;
 }
 
@@ -32,29 +35,91 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
   const [categoryColor, setCategoryColor] = useState(CATEGORY_COLORS[0]);
+  const [parentCategoryId, setParentCategoryId] = useState<string | undefined>(undefined);
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
 
-  const handleOpenCategoryModal = (category?: Category) => {
+  const handleOpenCategoryModal = (category?: Category, parentId?: string) => {
     if (category) {
       setEditingCategory(category);
       setCategoryName(category.name);
       setCategoryColor(category.color);
+      setParentCategoryId(parentId);
     } else {
       setEditingCategory(null);
       setCategoryName('');
-      setCategoryColor(CATEGORY_COLORS[0]);
+      setCategoryColor(parentId ? categories.find(c => c.id === parentId)?.color || CATEGORY_COLORS[0] : CATEGORY_COLORS[0]);
+      setParentCategoryId(parentId);
     }
     setCategoryModalOpen(true);
   };
-  
+
   const handleSave = () => {
     if (!categoryName) return;
     const categoryData: Category = editingCategory
       ? { ...editingCategory, name: categoryName, color: categoryColor }
-      : { id: `cat-${Date.now()}`, name: categoryName, color: categoryColor };
+      : { id: `cat-${Date.now()}`, name: categoryName, color: categoryColor, subCategories: [] };
 
-    onSaveCategory(categoryData);
+    onSaveCategory(categoryData, parentCategoryId);
     setCategoryModalOpen(false);
   };
+  
+  const toggleCategory = (categoryId: string) => {
+    setOpenCategories(prev => ({ ...prev, [categoryId]: !prev[categoryId] }));
+  };
+
+  const renderCategory = (category: Category, isSubcategory = false) => (
+    <Collapsible open={openCategories[category.id]} onOpenChange={() => toggleCategory(category.id)} key={category.id}>
+      <SidebarMenuItem className={cn(isSubcategory && "ml-4")}>
+        <div className="flex items-center w-full">
+          {!!category.subCategories?.length && (
+            <CollapsibleTrigger asChild>
+              <button className="p-1 rounded-md hover:bg-accent">
+                <ChevronRight className={cn("w-4 h-4 transition-transform", openCategories[category.id] && "rotate-90")} />
+              </button>
+            </CollapsibleTrigger>
+          )}
+          <SidebarMenuButton tooltip={category.name} isActive={false} className={cn(!category.subCategories?.length && "ml-6")}>
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+            <span>{category.name}</span>
+          </SidebarMenuButton>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuAction showOnHover>
+              <MoreVertical />
+            </SidebarMenuAction>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleOpenCategoryModal(category)}>
+              <Edit className="mr-2 h-4 w-4" />
+              <span>Edit</span>
+            </DropdownMenuItem>
+             {!isSubcategory && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleOpenCategoryModal(undefined, category.id)}>
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  <span>Add Sub-category</span>
+                </DropdownMenuItem>
+              </>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onDeleteCategory(category.id)} className="text-red-500">
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>Delete</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+      {category.subCategories && category.subCategories.length > 0 && (
+        <CollapsibleContent>
+           <SidebarMenu>
+            {category.subCategories.map(subCat => renderCategory(subCat, true))}
+           </SidebarMenu>
+        </CollapsibleContent>
+      )}
+    </Collapsible>
+  );
 
   return (
     <>
@@ -69,31 +134,7 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
           <SidebarGroup>
             <SidebarGroupLabel>Categories</SidebarGroupLabel>
             <SidebarMenu>
-              {categories.map(category => (
-                <SidebarMenuItem key={category.id}>
-                  <SidebarMenuButton tooltip={category.name} isActive={false}>
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-                    <span>{category.name}</span>
-                  </SidebarMenuButton>
-                   <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                         <SidebarMenuAction showOnHover>
-                            <MoreVertical />
-                         </SidebarMenuAction>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => handleOpenCategoryModal(category)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              <span>Edit</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onDeleteCategory(category.id)} className="text-red-500">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Delete</span>
-                          </DropdownMenuItem>
-                      </DropdownMenuContent>
-                   </DropdownMenu>
-                </SidebarMenuItem>
-              ))}
+              {categories.map(category => renderCategory(category))}
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -104,18 +145,18 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory }: App
           </Button>
         </SidebarFooter>
       </Sidebar>
-      
+
       <Dialog open={isCategoryModalOpen} onOpenChange={setCategoryModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingCategory ? 'Edit' : 'Create'} Category</DialogTitle>
+            <DialogTitle>{editingCategory ? 'Edit' : (parentCategoryId ? 'New Sub-category' : 'New Category')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="category-name">Name</Label>
-              <Input 
-                id="category-name" 
-                value={categoryName} 
+              <Input
+                id="category-name"
+                value={categoryName}
                 onChange={(e) => setCategoryName(e.target.value)}
               />
             </div>

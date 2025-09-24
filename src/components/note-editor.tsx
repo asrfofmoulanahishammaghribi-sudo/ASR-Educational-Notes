@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Paperclip, FileText, Download, Wand2, Loader2, Bold, Italic, Underline, List, ListOrdered, Code, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel
 } from "@/components/ui/select";
 import {
   Sheet,
@@ -130,11 +132,28 @@ export function NoteEditor({ isOpen, onOpenChange, note, onSave, categories }: N
   }
 
   const applySuggestedCategory = (header: string) => {
-    const existingCategory = categories.find(c => c.name.toLowerCase() === header.toLowerCase());
+    const allCategories: Category[] = [];
+    const flatten = (cats: Category[]) => {
+      cats.forEach(c => {
+        allCategories.push(c);
+        if (c.subCategories) flatten(c.subCategories);
+      });
+    };
+    flatten(categories);
+    const existingCategory = allCategories.find(c => c.name.toLowerCase() === header.toLowerCase());
     if (existingCategory) {
         setCategoryId(existingCategory.id);
     }
   }
+  
+  const renderCategoryOptions = (cats: Category[], isSub = false) => {
+    return cats.map(cat => (
+        <React.Fragment key={cat.id}>
+            <SelectItem value={cat.id} className={isSub ? 'pl-8' : ''}>{cat.name}</SelectItem>
+            {cat.subCategories && renderCategoryOptions(cat.subCategories, true)}
+        </React.Fragment>
+    ));
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -155,9 +174,7 @@ export function NoteEditor({ isOpen, onOpenChange, note, onSave, categories }: N
                     <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                    {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                    ))}
+                    {renderCategoryOptions(categories)}
                 </SelectContent>
             </Select>
 

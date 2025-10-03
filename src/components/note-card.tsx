@@ -13,6 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Note, Category } from '@/lib/data';
 import { MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import "quill/dist/quill.snow.css";
+
 
 interface NoteCardProps {
   note: Note;
@@ -31,7 +33,10 @@ export function NoteCard({ note, category, onEdit, onDelete, onView, isLoggedIn 
             <CardTitle className="text-lg font-bold font-headline">{note.title}</CardTitle>
         </CardHeader>
         <CardContent>
-            <p className="text-sm text-muted-foreground line-clamp-4">{note.content}</p>
+            <div 
+              className="text-sm text-muted-foreground line-clamp-4 ql-editor"
+              dangerouslySetInnerHTML={{ __html: note.content }}
+            />
         </CardContent>
       </div>
       <CardFooter className="flex flex-col items-start gap-4 pt-4">

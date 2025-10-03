@@ -34,7 +34,7 @@ export function NoteCard({ note, category, onEdit, onDelete, onView, isLoggedIn 
         </CardHeader>
         <CardContent>
             <div 
-              className="text-sm text-muted-foreground line-clamp-4 ql-editor"
+              className="text-sm line-clamp-4 ql-editor note-content-color"
               dangerouslySetInnerHTML={{ __html: note.content }}
             />
         </CardContent>

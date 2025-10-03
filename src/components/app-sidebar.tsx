@@ -94,7 +94,7 @@ export function AppSidebar({
           <SidebarMenuButton 
             tooltip={category.name} 
             isActive={selectedCategoryId === category.id} 
-            className={cn(!category.subCategories?.length && "ml-5")}
+            className={cn(!category.subCategories?.length && "ml-5", isSubcategory ? 'subcategory-text-color' : 'category-text-color')}
             onClick={() => onSelectCategory(category.id)}
           >
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
@@ -149,7 +149,7 @@ export function AppSidebar({
           <SidebarGroup>
              <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => onSelectCategory(null)} isActive={selectedCategoryId === null}>
+                <SidebarMenuButton onClick={() => onSelectCategory(null)} isActive={selectedCategoryId === null} className="category-text-color">
                   <List />
                   <span>All Notes</span>
                 </SidebarMenuButton>

@@ -6,6 +6,9 @@ interface UserTheme {
   primary: string;
   background: string;
   accent: string;
+  note: string;
+  category: string;
+  subcategory: string;
 }
 
 interface User {
@@ -46,6 +49,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     root.style.removeProperty('--background');
     root.style.removeProperty('--primary');
     root.style.removeProperty('--accent');
+    root.style.removeProperty('--note-foreground');
+    root.style.removeProperty('--category-foreground');
+    root.style.removeProperty('--subcategory-foreground');
   };
 
   return (

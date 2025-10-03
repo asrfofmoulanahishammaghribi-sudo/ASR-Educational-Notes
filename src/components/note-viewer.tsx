@@ -40,7 +40,7 @@ export function NoteViewer({ isOpen, onOpenChange, note, category }: NoteViewerP
         </DialogHeader>
         <ScrollArea className="flex-1 pr-6 -mr-6">
           <div 
-            className="prose dark:prose-invert max-w-none ql-editor"
+            className="prose dark:prose-invert max-w-none ql-editor note-content-color"
             dangerouslySetInnerHTML={{ __html: note.content }}
           />
         </ScrollArea>

@@ -142,53 +142,73 @@ export function NotesPage() {
   
   const handleSaveCategory = async (categoryToSave: Category, parentId?: string) => {
     if (!isLoggedIn) return;
-
-    const updateCategories = (cats: Category[]): Category[] => {
-      // Check if the category to save is an existing subcategory
-      let isExistingSubCategory = false;
-      for (const cat of cats) {
-        if (cat.subCategories?.some(sub => sub.id === categoryToSave.id)) {
-          isExistingSubCategory = true;
-          break;
+  
+    const recursivelyUpdate = (cats: Category[]): Category[] => {
+      // First, try to update an existing category in the current level
+      let categoryFound = false;
+      const updatedCats = cats.map(c => {
+        if (c.id === categoryToSave.id) {
+          categoryFound = true;
+          // Retain subCategories if they exist on the old category
+          return { ...categoryToSave, subCategories: c.subCategories || [] };
         }
-      }
-
-      // If we're adding a new subcategory OR updating an existing one.
-      if (parentId || isExistingSubCategory) {
+        if (c.subCategories) {
+          return { ...c, subCategories: recursivelyUpdate(c.subCategories) };
+        }
+        return c;
+      });
+  
+      if (categoryFound) return updatedCats;
+  
+      // If not found for an update, it's either a new subcategory or a new top-level category
+      if (parentId) {
         return cats.map(c => {
-          if (c.id === parentId) { // This is for creating a new subcategory
-             const existingSub = c.subCategories?.find(sc => sc.id === categoryToSave.id);
-             if (existingSub) { // This should not happen if parentId is provided for new subcategory
-                const updatedSubCategories = c.subCategories?.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc);
-                return { ...c, subCategories: updatedSubCategories };
-             } else {
-                const newSubCategories = [...(c.subCategories || []), categoryToSave];
-                return { ...c, subCategories: newSubCategories };
-             }
+          if (c.id === parentId) {
+            const newSubCategories = [...(c.subCategories || []), categoryToSave];
+            return { ...c, subCategories: newSubCategories };
           }
-          if (c.subCategories) { // This is for updating an existing subcategory
-            const subCatExists = c.subCategories.some(sc => sc.id === categoryToSave.id);
-            if (subCatExists) {
-               return {
-                ...c,
-                subCategories: c.subCategories.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc)
-              };
-            }
+          if (c.subCategories) {
+            return { ...c, subCategories: recursivelyUpdate(c.subCategories) };
           }
           return c;
         });
-      } else { // This is for top-level categories
-        const isExistingTopLevel = cats.some(c => c.id === categoryToSave.id);
-        if (isExistingTopLevel) {
-          return cats.map(c => c.id === categoryToSave.id ? categoryToSave : c);
+      }
+      
+      // If no parentId and not found for update, it's a new top-level category.
+      // The initial recursive call handles this at the top level.
+      return cats;
+    };
+  
+    let updatedCategories;
+    const isExisting = categories.some(c => c.id === categoryToSave.id);
+  
+    if (parentId) {
+      // It's a new subcategory or an edit of a category that has a parent
+      updatedCategories = recursivelyUpdate(categories);
+    } else {
+      // It's a new top-level category or an edit of a top-level category
+      const isTopLevelExisting = categories.some(c => c.id === categoryToSave.id);
+      if (isTopLevelExisting) {
+        updatedCategories = categories.map(c => c.id === categoryToSave.id ? { ...categoryToSave, subCategories: c.subCategories || [] } : c);
+      } else {
+        // If it's a truly new category, check it's not a misplaced subcategory update
+        let isActuallySub = false;
+        const checkSub = (cats: Category[]) => {
+            cats.forEach(c => {
+                if (c.subCategories?.some(sc => sc.id === categoryToSave.id)) isActuallySub = true;
+                if (c.subCategories) checkSub(c.subCategories);
+            })
+        }
+        checkSub(categories);
+
+        if (isActuallySub) {
+            updatedCategories = recursivelyUpdate(categories);
         } else {
-          return [...cats, categoryToSave];
+            updatedCategories = [...categories, categoryToSave];
         }
       }
-    };
-    
-    const updatedCategories = updateCategories(categories);
-
+    }
+  
     try {
       await saveAllCategories(updatedCategories);
       setCategories(updatedCategories);
@@ -197,35 +217,58 @@ export function NotesPage() {
       console.error("Error saving categories:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not save categories." });
     }
-  }
+  };
 
   const handleDeleteCategory = async (categoryId: string) => {
     if (!isLoggedIn) return;
-    const notesExist = notes.some(n => {
-        if (n.categoryId === categoryId) return true;
-        const parentCategory = categories.find(c => c.subCategories?.some(sc => sc.id === categoryId));
-        return parentCategory?.subCategories?.some(sc => sc.id === n.categoryId);
-    });
+
+    const getCategoryIdsToDelete = (cats: Category[], id: string): string[] => {
+        let ids: string[] = [];
+        const categoryToDelete = cats.find(c => c.id === id);
+        if (categoryToDelete) {
+            ids.push(categoryToDelete.id);
+            if (categoryToDelete.subCategories) {
+                categoryToDelete.subCategories.forEach(sub => {
+                    ids = [...ids, ...getCategoryIdsToDelete([sub], sub.id)];
+                });
+            }
+        } else {
+            for (const cat of cats) {
+                if (cat.subCategories) {
+                    const subIds = getCategoryIdsToDelete(cat.subCategories, id);
+                    if (subIds.length > 0) {
+                        ids = [...ids, ...subIds];
+                        break;
+                    }
+                }
+            }
+        }
+        return ids;
+    };
+    
+    const idsToDelete = getCategoryIdsToDelete(categories, categoryId);
+
+    const notesExist = notes.some(n => idsToDelete.includes(n.categoryId));
 
     if (notesExist) {
       toast({
         variant: "destructive",
         title: "Cannot delete category",
-        description: "Please reassign or delete notes in this category first.",
+        description: "Please reassign or delete notes in this category or its subcategories first.",
       });
       return;
     }
 
-    const removeCategory = (cats: Category[], id: string): Category[] => {
+    const removeCategoryRecursively = (cats: Category[], id: string): Category[] => {
         return cats.filter(c => c.id !== id).map(c => {
             if (c.subCategories) {
-                return { ...c, subCategories: removeCategory(c.subCategories, id) };
+                return { ...c, subCategories: removeCategoryRecursively(c.subCategories, id) };
             }
             return c;
         });
     };
 
-    const updatedCategories = removeCategory(categories, categoryId);
+    const updatedCategories = removeCategoryRecursively(categories, categoryId);
     try {
       await saveAllCategories(updatedCategories); // We resave the whole tree to remove one
       setCategories(updatedCategories);

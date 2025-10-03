@@ -97,15 +97,11 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory, isLog
                 <Edit className="mr-2 h-4 w-4" />
                 <span>Edit</span>
               </DropdownMenuItem>
-               {!isSubcategory && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleOpenCategoryModal(undefined, category.id)}>
-                    <FolderPlus className="mr-2 h-4 w-4" />
-                    <span>Add Sub-category</span>
-                  </DropdownMenuItem>
-                </>
-              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleOpenCategoryModal(undefined, category.id)}>
+                <FolderPlus className="mr-2 h-4 w-4" />
+                <span>Add Sub-category</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onDeleteCategory(category.id)} className="text-red-500">
                 <Trash2 className="mr-2 h-4 w-4" />

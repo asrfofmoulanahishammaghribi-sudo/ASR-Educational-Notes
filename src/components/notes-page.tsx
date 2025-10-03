@@ -142,35 +142,52 @@ export function NotesPage() {
   
   const handleSaveCategory = async (categoryToSave: Category, parentId?: string) => {
     if (!isLoggedIn) return;
-    let updatedCategories = [...categories];
-    if (parentId) {
-      const addSubCategory = (cats: Category[]): Category[] => {
+
+    const updateCategories = (cats: Category[]): Category[] => {
+      // Check if the category to save is an existing subcategory
+      let isExistingSubCategory = false;
+      for (const cat of cats) {
+        if (cat.subCategories?.some(sub => sub.id === categoryToSave.id)) {
+          isExistingSubCategory = true;
+          break;
+        }
+      }
+
+      // If we're adding a new subcategory OR updating an existing one.
+      if (parentId || isExistingSubCategory) {
         return cats.map(c => {
-          if (c.id === parentId) {
-            const existingSub = c.subCategories?.find(sc => sc.id === categoryToSave.id);
-            if (existingSub) {
-              const updatedSubCategories = c.subCategories?.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc);
-              return { ...c, subCategories: updatedSubCategories };
-            } else {
-              const newSubCategories = [...(c.subCategories || []), categoryToSave];
-              return { ...c, subCategories: newSubCategories };
-            }
+          if (c.id === parentId) { // This is for creating a new subcategory
+             const existingSub = c.subCategories?.find(sc => sc.id === categoryToSave.id);
+             if (existingSub) { // This should not happen if parentId is provided for new subcategory
+                const updatedSubCategories = c.subCategories?.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc);
+                return { ...c, subCategories: updatedSubCategories };
+             } else {
+                const newSubCategories = [...(c.subCategories || []), categoryToSave];
+                return { ...c, subCategories: newSubCategories };
+             }
           }
-          if (c.subCategories) {
-            return { ...c, subCategories: addSubCategory(c.subCategories) };
+          if (c.subCategories) { // This is for updating an existing subcategory
+            const subCatExists = c.subCategories.some(sc => sc.id === categoryToSave.id);
+            if (subCatExists) {
+               return {
+                ...c,
+                subCategories: c.subCategories.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc)
+              };
+            }
           }
           return c;
         });
-      };
-      updatedCategories = addSubCategory(updatedCategories);
-    } else {
-      const isNew = !categories.some(c => c.id === categoryToSave.id);
-      if (isNew) {
-        updatedCategories.push(categoryToSave);
-      } else {
-        updatedCategories = categories.map(c => c.id === categoryToSave.id ? categoryToSave : c);
+      } else { // This is for top-level categories
+        const isExistingTopLevel = cats.some(c => c.id === categoryToSave.id);
+        if (isExistingTopLevel) {
+          return cats.map(c => c.id === categoryToSave.id ? categoryToSave : c);
+        } else {
+          return [...cats, categoryToSave];
+        }
       }
-    }
+    };
+    
+    const updatedCategories = updateCategories(categories);
 
     try {
       await saveAllCategories(updatedCategories);
@@ -260,6 +277,7 @@ export function NotesPage() {
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>{(user.displayName || user.email)?.[0]}</AvatarFallback>
+
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>

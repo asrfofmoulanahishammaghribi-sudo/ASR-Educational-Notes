@@ -1,3 +1,4 @@
+
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -9,7 +10,13 @@ interface ColorPickerProps {
   onSelectColor: (color: string) => void;
 }
 
-const hslToCss = (hslString: string) => `hsl(${hslString})`;
+const hslToCss = (hslString: string) => {
+  // Check if it's already a hex color
+  if (hslString.startsWith('#')) {
+    return hslString;
+  }
+  return `hsl(${hslString})`;
+}
 
 export function ColorPicker({ colors, selectedColor, onSelectColor }: ColorPickerProps) {
   return (

@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import 'quill/dist/quill.snow.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
 import { ThemeInjector } from '@/components/theme-injector';

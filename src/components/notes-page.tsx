@@ -35,6 +35,7 @@ export function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [isViewerOpen, setViewerOpen] = useState(false);
@@ -77,14 +78,51 @@ export function NotesPage() {
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
+  
+  const getCategoryAndSubCategoryIds = (categories: Category[], categoryId: string): string[] => {
+    let ids: string[] = [];
+    const findCategory = (cats: Category[], id: string) => {
+        for (const cat of cats) {
+            if (cat.id === id) {
+                ids.push(cat.id);
+                if (cat.subCategories) {
+                    cat.subCategories.forEach(subCat => {
+                        ids.push(subCat.id);
+                        if (subCat.subCategories) {
+                            getCategoryAndSubCategoryIds(subCat.subCategories, subCat.id).forEach(subId => ids.push(subId));
+                        }
+                    });
+                }
+                return cat;
+            }
+            if (cat.subCategories) {
+                const found = findCategory(cat.subCategories, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    findCategory(categories, categoryId);
+    return [...new Set(ids)]; // Return unique IDs
+  };
 
   const filteredNotes = useMemo(() => {
-    return notes.filter(note =>
+    let notesToFilter = notes;
+    
+    if (selectedCategoryId) {
+      const categoryIdsToFilter = getCategoryAndSubCategoryIds(categories, selectedCategoryId);
+      notesToFilter = notesToFilter.filter(note => categoryIdsToFilter.includes(note.categoryId));
+    }
+    
+    if (!searchTerm) return notesToFilter;
+
+    return notesToFilter.filter(note =>
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  }, [notes, searchTerm]);
+  }, [notes, searchTerm, selectedCategoryId, categories]);
 
   const handleNewNote = () => {
     if (!isLoggedIn) return;
@@ -120,13 +158,15 @@ export function NotesPage() {
 
   const handleSaveNote = async (noteToSave: Note) => {
     if (!isLoggedIn) return;
-    const isNewNote = !editingNote;
+    const isNewNote = !noteToSave.id || !notes.some(n => n.id === noteToSave.id);
+    const finalNote = { ...noteToSave, id: noteToSave.id || `note-${Date.now()}` };
+
     try {
-        await saveNoteToDb(noteToSave);
+        await saveNoteToDb(finalNote);
         if (isNewNote) {
-            setNotes([noteToSave, ...notes]);
+            setNotes([finalNote, ...notes]);
         } else {
-            setNotes(notes.map(n => n.id === noteToSave.id ? noteToSave : n));
+            setNotes(notes.map(n => n.id === finalNote.id ? finalNote : n));
         }
         toast({
             title: isNewNote ? "Note Created" : "Note Updated",
@@ -142,36 +182,41 @@ export function NotesPage() {
   
   const handleSaveCategory = async (categoryToSave: Category, parentId?: string) => {
     if (!isLoggedIn) return;
+
     let updatedCategories = [...categories];
-    if (parentId) {
-      const addSubCategory = (cats: Category[]): Category[] => {
-        return cats.map(c => {
-          if (c.id === parentId) {
-            const existingSub = c.subCategories?.find(sc => sc.id === categoryToSave.id);
-            if (existingSub) {
-              const updatedSubCategories = c.subCategories?.map(sc => sc.id === categoryToSave.id ? categoryToSave : sc);
-              return { ...c, subCategories: updatedSubCategories };
-            } else {
-              const newSubCategories = [...(c.subCategories || []), categoryToSave];
-              return { ...c, subCategories: newSubCategories };
-            }
-          }
-          if (c.subCategories) {
-            return { ...c, subCategories: addSubCategory(c.subCategories) };
-          }
-          return c;
-        });
-      };
-      updatedCategories = addSubCategory(updatedCategories);
-    } else {
-      const isNew = !categories.some(c => c.id === categoryToSave.id);
-      if (isNew) {
-        updatedCategories.push(categoryToSave);
-      } else {
-        updatedCategories = categories.map(c => c.id === categoryToSave.id ? categoryToSave : c);
-      }
+    
+    const isExisting = (cats: Category[], id: string): boolean => {
+        return cats.some(c => c.id === id || (c.subCategories && isExisting(c.subCategories, id)));
     }
 
+    const recursivelyUpdate = (cats: Category[]): Category[] => {
+      return cats.map(c => {
+        if (c.id === categoryToSave.id) {
+            return { ...categoryToSave, subCategories: c.subCategories || [] };
+        }
+        if (c.id === parentId) {
+            // New subcategory, add it
+            const newSubCategories = [...(c.subCategories || []), categoryToSave];
+            return { ...c, subCategories: newSubCategories };
+        }
+        if (c.subCategories) {
+            return { ...c, subCategories: recursivelyUpdate(c.subCategories) };
+        }
+        return c;
+      });
+    };
+
+    if (isExisting(updatedCategories, categoryToSave.id)) {
+        // This is an update
+        updatedCategories = recursivelyUpdate(updatedCategories);
+    } else if (parentId) {
+        // This is a new subcategory
+        updatedCategories = recursivelyUpdate(updatedCategories);
+    } else {
+        // This is a new top-level category
+        updatedCategories = [...updatedCategories, categoryToSave];
+    }
+  
     try {
       await saveAllCategories(updatedCategories);
       setCategories(updatedCategories);
@@ -180,35 +225,58 @@ export function NotesPage() {
       console.error("Error saving categories:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not save categories." });
     }
-  }
+  };
 
   const handleDeleteCategory = async (categoryId: string) => {
     if (!isLoggedIn) return;
-    const notesExist = notes.some(n => {
-        if (n.categoryId === categoryId) return true;
-        const parentCategory = categories.find(c => c.subCategories?.some(sc => sc.id === categoryId));
-        return parentCategory?.subCategories?.some(sc => sc.id === n.categoryId);
-    });
+
+    const getCategoryIdsToDelete = (cats: Category[], id: string): string[] => {
+        let ids: string[] = [];
+        const categoryToDelete = cats.find(c => c.id === id);
+        if (categoryToDelete) {
+            ids.push(categoryToDelete.id);
+            if (categoryToDelete.subCategories) {
+                categoryToDelete.subCategories.forEach(sub => {
+                    ids = [...ids, ...getCategoryIdsToDelete([sub], sub.id)];
+                });
+            }
+        } else {
+            for (const cat of cats) {
+                if (cat.subCategories) {
+                    const subIds = getCategoryIdsToDelete(cat.subCategories, id);
+                    if (subIds.length > 0) {
+                        ids = [...ids, ...subIds];
+                        break;
+                    }
+                }
+            }
+        }
+        return ids;
+    };
+    
+    const idsToDelete = getCategoryIdsToDelete(categories, categoryId);
+
+    const notesExist = notes.some(n => idsToDelete.includes(n.categoryId));
 
     if (notesExist) {
       toast({
         variant: "destructive",
         title: "Cannot delete category",
-        description: "Please reassign or delete notes in this category first.",
+        description: "Please reassign or delete notes in this category or its subcategories first.",
       });
       return;
     }
 
-    const removeCategory = (cats: Category[], id: string): Category[] => {
+    const removeCategoryRecursively = (cats: Category[], id: string): Category[] => {
         return cats.filter(c => c.id !== id).map(c => {
             if (c.subCategories) {
-                return { ...c, subCategories: removeCategory(c.subCategories, id) };
+                return { ...c, subCategories: removeCategoryRecursively(c.subCategories, id) };
             }
             return c;
         });
     };
 
-    const updatedCategories = removeCategory(categories, categoryId);
+    const updatedCategories = removeCategoryRecursively(categories, categoryId);
     try {
       await saveAllCategories(updatedCategories); // We resave the whole tree to remove one
       setCategories(updatedCategories);
@@ -233,6 +301,8 @@ export function NotesPage() {
       return flatCategories;
   }, [categories]);
 
+  const allCategoryIds = useMemo(() => allCategories.map(c => c.id), [allCategories]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -241,6 +311,9 @@ export function NotesPage() {
           onSaveCategory={handleSaveCategory}
           onDeleteCategory={handleDeleteCategory}
           isLoggedIn={isLoggedIn}
+          selectedCategoryId={selectedCategoryId}
+          onSelectCategory={setSelectedCategoryId}
+          allCategoryIds={allCategoryIds}
         />
         <SidebarInset className="flex-1 flex flex-col bg-background">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
@@ -260,6 +333,7 @@ export function NotesPage() {
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>{(user.displayName || user.email)?.[0]}</AvatarFallback>
+
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>

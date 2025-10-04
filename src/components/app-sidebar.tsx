@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/color-picker';
 import { Category, CATEGORY_COLORS } from '@/lib/data';
-import { Plus, Trash2, Edit, MoreVertical, ChevronRight, FolderPlus } from 'lucide-react';
+import { Plus, Trash2, Edit, MoreVertical, ChevronRight, FolderPlus, List } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -29,9 +29,20 @@ interface AppSidebarProps {
   onSaveCategory: (category: Category, parentId?: string) => void;
   onDeleteCategory: (categoryId: string) => void;
   isLoggedIn: boolean;
+  selectedCategoryId: string | null;
+  onSelectCategory: (categoryId: string | null) => void;
+  allCategoryIds: string[];
 }
 
-export function AppSidebar({ categories, onSaveCategory, onDeleteCategory, isLoggedIn }: AppSidebarProps) {
+export function AppSidebar({ 
+  categories, 
+  onSaveCategory, 
+  onDeleteCategory, 
+  isLoggedIn,
+  selectedCategoryId,
+  onSelectCategory,
+  allCategoryIds
+}: AppSidebarProps) {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
@@ -75,12 +86,17 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory, isLog
         <div className="flex items-center w-full">
           {!!category.subCategories?.length && (
             <CollapsibleTrigger asChild>
-              <button className="p-1 rounded-md hover:bg-accent">
+              <button className="p-1 -ml-1 rounded-md hover:bg-accent" onClick={(e) => e.stopPropagation()}>
                 <ChevronRight className={cn("w-4 h-4 transition-transform", openCategories[category.id] && "rotate-90")} />
               </button>
             </CollapsibleTrigger>
           )}
-          <SidebarMenuButton tooltip={category.name} isActive={false} className={cn(!category.subCategories?.length && "ml-6")}>
+          <SidebarMenuButton 
+            tooltip={category.name} 
+            isActive={selectedCategoryId === category.id} 
+            className={cn(!category.subCategories?.length && "ml-5", isSubcategory ? 'subcategory-text-color' : 'category-text-color')}
+            onClick={() => onSelectCategory(category.id)}
+          >
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
             <span>{category.name}</span>
           </SidebarMenuButton>
@@ -97,15 +113,11 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory, isLog
                 <Edit className="mr-2 h-4 w-4" />
                 <span>Edit</span>
               </DropdownMenuItem>
-               {!isSubcategory && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleOpenCategoryModal(undefined, category.id)}>
-                    <FolderPlus className="mr-2 h-4 w-4" />
-                    <span>Add Sub-category</span>
-                  </DropdownMenuItem>
-                </>
-              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleOpenCategoryModal(undefined, category.id)}>
+                <FolderPlus className="mr-2 h-4 w-4" />
+                <span>Add Sub-category</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onDeleteCategory(category.id)} className="text-red-500">
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -134,6 +146,16 @@ export function AppSidebar({ categories, onSaveCategory, onDeleteCategory, isLog
           </div>
         </SidebarHeader>
         <SidebarContent>
+          <SidebarGroup>
+             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => onSelectCategory(null)} isActive={selectedCategoryId === null} className="category-text-color">
+                  <List />
+                  <span>All Notes</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupLabel>Categories</SidebarGroupLabel>
             <SidebarMenu>

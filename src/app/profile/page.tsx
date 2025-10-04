@@ -51,6 +51,17 @@ const ACCENT_COLORS = [
   "50 90% 55%",
 ];
 
+const FONT_COLORS = [
+  "210 40% 98%",
+  "210 40% 80%",
+  "210 40% 60%",
+  "0 0% 100%",
+  "220 70% 90%",
+  "340 80% 90%",
+  "160 60% 85%",
+  "50 90% 85%",
+];
+
 export default function ProfilePage() {
   const { user, login } = useAuth();
   const router = useRouter();
@@ -62,14 +73,21 @@ export default function ProfilePage() {
   const [primaryColor, setPrimaryColor] = useState(PRIMARY_COLORS[0]);
   const [backgroundColor, setBackgroundColor] = useState(BACKGROUND_COLORS[0]);
   const [accentColor, setAccentColor] = useState(ACCENT_COLORS[0]);
+  const [noteColor, setNoteColor] = useState(FONT_COLORS[2]);
+  const [categoryColor, setCategoryColor] = useState(FONT_COLORS[1]);
+  const [subcategoryColor, setSubcategoryColor] = useState(FONT_COLORS[1]);
+
 
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName);
       if (user.theme) {
-        setPrimaryColor(user.theme.primary);
-        setBackgroundColor(user.theme.background);
-        setAccentColor(user.theme.accent);
+        setPrimaryColor(user.theme.primary || PRIMARY_COLORS[0]);
+        setBackgroundColor(user.theme.background || BACKGROUND_COLORS[0]);
+        setAccentColor(user.theme.accent || ACCENT_COLORS[0]);
+        setNoteColor(user.theme.note || FONT_COLORS[2]);
+        setCategoryColor(user.theme.category || FONT_COLORS[1]);
+        setSubcategoryColor(user.theme.subcategory || FONT_COLORS[1]);
       }
     } else {
       // Redirect to login if not authenticated
@@ -96,6 +114,9 @@ export default function ProfilePage() {
             primary: primaryColor,
             background: backgroundColor,
             accent: accentColor,
+            note: noteColor,
+            category: categoryColor,
+            subcategory: subcategoryColor,
         } 
     };
     
@@ -127,7 +148,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">User Profile</CardTitle>
@@ -172,29 +193,56 @@ export default function ProfilePage() {
             <h3 className="text-lg font-medium">Theme</h3>
             <p className="text-sm text-muted-foreground">Customize your app's appearance.</p>
           </div>
-          <div className="grid gap-2">
-            <Label>Primary Color</Label>
-            <ColorPicker
-                colors={PRIMARY_COLORS}
-                selectedColor={primaryColor}
-                onSelectColor={setPrimaryColor}
-              />
-          </div>
-           <div className="grid gap-2">
-            <Label>Background Color</Label>
-             <ColorPicker
-                colors={BACKGROUND_COLORS}
-                selectedColor={backgroundColor}
-                onSelectColor={setBackgroundColor}
-              />
-          </div>
-           <div className="grid gap-2">
-            <Label>Accent Color</Label>
-             <ColorPicker
-                colors={ACCENT_COLORS}
-                selectedColor={accentColor}
-                onSelectColor={setAccentColor}
-              />
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label>Primary Color</Label>
+              <ColorPicker
+                  colors={PRIMARY_COLORS}
+                  selectedColor={primaryColor}
+                  onSelectColor={setPrimaryColor}
+                />
+            </div>
+             <div className="grid gap-2">
+              <Label>Background Color</Label>
+               <ColorPicker
+                  colors={BACKGROUND_COLORS}
+                  selectedColor={backgroundColor}
+                  onSelectColor={setBackgroundColor}
+                />
+            </div>
+             <div className="grid gap-2">
+              <Label>Accent Color</Label>
+               <ColorPicker
+                  colors={ACCENT_COLORS}
+                  selectedColor={accentColor}
+                  onSelectColor={setAccentColor}
+                />
+            </div>
+            <Separator/>
+             <div className="grid gap-2">
+              <Label>Note Font Color</Label>
+               <ColorPicker
+                  colors={FONT_COLORS}
+                  selectedColor={noteColor}
+                  onSelectColor={setNoteColor}
+                />
+            </div>
+            <div className="grid gap-2">
+              <Label>Category Font Color</Label>
+               <ColorPicker
+                  colors={FONT_COLORS}
+                  selectedColor={categoryColor}
+                  onSelectColor={setCategoryColor}
+                />
+            </div>
+            <div className="grid gap-2">
+              <Label>Sub-category Font Color</Label>
+               <ColorPicker
+                  colors={FONT_COLORS}
+                  selectedColor={subcategoryColor}
+                  onSelectColor={setSubcategoryColor}
+                />
+            </div>
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">

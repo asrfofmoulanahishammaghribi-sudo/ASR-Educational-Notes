@@ -13,7 +13,6 @@ import { Paperclip, Download } from "lucide-react";
 import { FileIcon } from "./file-icon";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
-import "quill/dist/quill.snow.css";
 
 
 interface NoteViewerProps {

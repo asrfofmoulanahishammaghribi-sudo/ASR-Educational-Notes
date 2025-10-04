@@ -13,7 +13,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Note, Category } from '@/lib/data';
 import { MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import "quill/dist/quill.snow.css";
 
 
 interface NoteCardProps {
